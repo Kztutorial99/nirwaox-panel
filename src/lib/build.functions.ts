@@ -52,7 +52,7 @@ export type BuildRun = {
   createdAt: string;
   htmlUrl: string;
   releaseUrl: string | null;
-  apkAssets: { name: string; url: string; size: number }[];
+  apkAssets: { name: string; url: string; size: number; assetId: number }[];
 };
 
 export const listRuns = createServerFn({ method: "GET" }).handler(async () => {
@@ -81,14 +81,15 @@ export const listRuns = createServerFn({ method: "GET" }).handler(async () => {
         if (rel.ok) {
           const relJson = (await rel.json()) as {
             html_url: string;
-            assets: { name: string; browser_download_url: string; size: number }[];
+            assets: { id: number; name: string; size: number }[];
           };
           releaseUrl = relJson.html_url;
           apkAssets = relJson.assets
             .filter((a) => a.name.endsWith(".apk"))
             .map((a) => ({
               name: a.name,
-              url: a.browser_download_url,
+              assetId: a.id,
+              url: `/api/download/${a.id}?name=${encodeURIComponent(a.name)}`,
               size: a.size,
             }));
         }
